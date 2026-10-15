@@ -1,0 +1,15 @@
+data/*.sqlite*
+data/*.db*
+data/seed.local.json
+*.xlsx
+*.xls
+work/
+outputs/
+.agents/
+.git/
+.env*
+node_modules/
+.next/
+.vinext/
+.wrangler/
+scripts/test-api.mjs

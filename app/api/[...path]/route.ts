@@ -1,6 +1,6 @@
-import { database, rows, snapshot } from '@/lib/database';
+import { database, rows, snapshot, loadSeed } from '@/lib/database';
 import { schemas, date, type Entity } from '@/lib/validation';
-import seed from '@/data/seed.json';
+
 import { z, ZodError } from 'zod';
 export const dynamic='force-dynamic';
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
@@ -18,6 +18,7 @@ async function handle(req:Request){
   if(req.method==='GET'&&entity==='data')return json(await snapshot());
   if(req.method==='GET'&&entity==='backup')return new Response(JSON.stringify(await snapshot(),null,2),{headers:{'Content-Type':'application/json','Content-Disposition':'attachment; filename="studio-ks-backup.json"','Cache-Control':'no-store'}});
   if(req.method==='POST'&&entity==='bootstrap'){
+   const seed=loadSeed();
    if((await rows("SELECT id FROM settings WHERE id='imported'"))[0])return json({imported:true});
    const statements=[db.prepare("INSERT INTO settings(id,value) VALUES ('imported',?)").bind(seed.metadata.sha256),db.prepare("INSERT INTO settings(id,value) VALUES ('business_name',?)").bind('Studio KS')];
    for(const table of ['clients','services','categories','movements','goals','reserves','invoices','issues'] as const){
@@ -85,8 +86,8 @@ async function handle(req:Request){
   if(e instanceof ZodError)return json({error:e.issues.map(i=>i.message).join(' ')},400);
   if(e instanceof HttpError)return json({error:e.message},e.status);
   console.error('Studio KS request failed',e);
-  if(String(e).includes('FOREIGN KEY'))return json({error:'Registro vinculado a outros dados. Edite ou desative o cadastro.'},409);
-  if(String(e).includes('UNIQUE'))return json({error:'Já existe um registro para este mês.'},409);
+  if(/foreign key/i.test(String(e)))return json({error:'Registro vinculado a outros dados. Edite ou desative o cadastro.'},409);
+  if(/unique/i.test(String(e)))return json({error:'Já existe um registro para este mês.'},409);
   return json({error:'Não foi possível concluir a operação. Tente novamente.'},500);
  }
 }

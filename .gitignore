@@ -64,3 +64,9 @@ next-env.d.ts
 *.xls
 *.tsbuildinfo
 data/backups/
+
+.vercel
+.env*
+
+/data/seed.local.json
+/skills-lock.json
