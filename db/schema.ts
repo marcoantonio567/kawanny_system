@@ -1,0 +1,15 @@
+import { sqliteTable, text, integer, index, check } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+export const clients=sqliteTable('clients',{id:text().primaryKey(),name:text().notNull(),phone:text().notNull().default(''),address:text().notNull().default(''),birthday:text().notNull().default(''),notes:text().notNull().default('')});
+export const services=sqliteTable('services',{id:text().primaryKey(),name:text().notNull(),price_cents:integer().notNull().default(0),duration:integer().notNull().default(60),active:integer().notNull().default(1)});
+export const categories=sqliteTable('categories',{id:text().primaryKey(),name:text().notNull(),kind:text().notNull()});
+export const movements=sqliteTable('movements',{
+ id:text().primaryKey(),date:text().notNull(),kind:text().notNull(),category_id:text().references(()=>categories.id),service_id:text().references(()=>services.id),client_id:text().references(()=>clients.id),description:text().notNull(),amount_cents:integer().notNull(),payment:text().notNull(),status:text().notNull().default('paid'),installments:integer().notNull().default(1),due_date:text(),source:text(),notes:text().notNull().default(''),deleted:integer().notNull().default(0)
+},t=>[index('movements_date_idx').on(t.date),index('movements_client_idx').on(t.client_id),check('positive_amount',sql`${t.amount_cents}>0`),check('valid_kind',sql`${t.kind} IN ('income','expense')`),check('valid_status',sql`${t.status} IN ('paid','pending')`)]);
+export const payments=sqliteTable('payments',{id:text().primaryKey(),debt_id:text().notNull().references(()=>movements.id),movement_id:text().notNull().references(()=>movements.id),date:text().notNull(),amount_cents:integer().notNull()},t=>[index('payments_debt_idx').on(t.debt_id),check('positive_payment',sql`${t.amount_cents}>0`)]);
+export const goals=sqliteTable('goals',{id:text().primaryKey(),period:text().notNull().unique(),income_cents:integer().notNull().default(0),expense_cents:integer().notNull().default(0),reserve_cents:integer().notNull().default(0)});
+export const reserves=sqliteTable('reserves',{id:text().primaryKey(),period:text().notNull(),name:text().notNull(),date:text().notNull(),amount_cents:integer().notNull(),target_cents:integer().notNull().default(0)});
+export const invoices=sqliteTable('invoices',{id:text().primaryKey(),period:text().notNull(),name:text().notNull(),previous_cents:integer().notNull().default(0),amount_cents:integer().notNull().default(0),paid:integer().notNull().default(0)});
+export const issues=sqliteTable('issues',{id:text().primaryKey(),source:text().notNull(),reason:text().notNull(),raw:text().notNull(),resolved:integer().notNull().default(0)});
+export const settings=sqliteTable('settings',{id:text().primaryKey(),value:text().notNull()});
+export const audit=sqliteTable('audit',{id:text().primaryKey(),actor:text().notNull(),action:text().notNull(),entity:text().notNull(),record_id:text().notNull(),before:text(),after:text(),created_at:text().notNull()});

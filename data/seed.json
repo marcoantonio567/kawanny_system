@@ -1,0 +1,15 @@
+{
+  "clients": [],
+  "services": [],
+  "categories": [],
+  "movements": [],
+  "goals": [],
+  "reserves": [],
+  "invoices": [],
+  "issues": [],
+  "metadata": {
+    "filename": "empty-installation",
+    "sha256": "empty-installation-v1",
+    "summaries": []
+  }
+}

@@ -1,0 +1,11 @@
+import {createRoot} from 'react-dom/client';
+import {useEffect,useState,type FormEvent} from 'react';
+import Studio from '../app/studio';
+import '../app/globals.css';
+function App(){const [state,setState]=useState<{setup:boolean;authenticated:boolean}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{fetch('/api/auth/status').then(r=>r.json()).then(setState).catch(()=>setError('Não foi possível conectar ao servidor.'))},[]);
+ async function submit(ev:FormEvent<HTMLFormElement>){ev.preventDefault();setBusy(true);setError('');const form=new FormData(ev.currentTarget);try{const r=await fetch('/api/auth/'+(state?.setup?'setup':'login'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:form.get('name'),password:form.get('password')})});const data=await r.json();if(!r.ok)throw new Error(data.error);setState({setup:false,authenticated:true})}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ if(state?.authenticated)return <Studio/>;
+ return <div className="login-screen"><section className="panel login-card"><span className="login-logo">ks ✧</span><p className="eyebrow">STUDIO KS · GESTÃO</p><h1>{state?.setup?'Seu studio começa aqui.':'Bem-vinda ao seu studio.'}</h1><p className="login-copy">{state?.setup?'Crie sua conta de administração para acessar clientes e finanças.':'Entre com seu usuário e senha para continuar.'}</p>{error&&<div role="alert" className="alert error">{error}</div>}{state&&<form onSubmit={submit}><label className="field"><span>Usuário</span><input name="name" required maxLength={100} autoComplete="username"/></label><label className="field"><span>{state.setup?'Crie uma senha (mínimo de 8 caracteres)':'Senha'}</span><input type="password" name="password" required minLength={state.setup?8:1} maxLength={128} autoComplete={state.setup?'new-password':'current-password'}/></label><button className="button primary full" disabled={busy}>{busy?'Aguarde…':state.setup?'Criar conta e entrar':'Entrar'}</button></form>}<small>Seus dados ficam no banco deste servidor.</small></section></div>
+}
+createRoot(document.getElementById('root')!).render(<App/>);
